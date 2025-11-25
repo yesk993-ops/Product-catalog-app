@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratings-service
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5001
+      targetPort: 5001
+      name: http
+  selector:
+    app: ratings-service
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratings-service-config
+  namespace: default
+data:
+  PORT: "5001"
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings-service
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ratings-service
+  template:
+    metadata:
+      labels:
+        app: ratings-service
+    spec:
+      containers:
+      - name: ratings-service
+        image: YOUR_DOCKER_USERNAME/ratings-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ratings-service-config
+              key: PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ratings-service-config
+              key: NODE_ENV
+        - name: MONGO_URI
+          value: "mongodb://mongodb:27017/ratings"
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ratings-service-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ratings-service-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ratings-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
