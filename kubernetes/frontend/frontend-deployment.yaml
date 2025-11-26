@@ -52,6 +52,10 @@ spec:
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 5
+        annotations:
+          argocd-image-updater.argoproj.io/image-list: product-service=YOUR_ACR/product-service
+          argocd-image-updater.argoproj.io/write-back-method: git
+          argocd-image-updater.argoproj.io/git-branch: main
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

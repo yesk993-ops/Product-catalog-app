@@ -2,6 +2,9 @@
 
 A microservices-based e-commerce application showcasing DevOps best practices including microservices architecture, containerization, CI/CD pipelines, and Kubernetes deployment.
 
+![Product Catalog App](images/product.jpg)
+)
+
 ## 🏗️ Architecture
 
 This application demonstrates a microservices architecture with the following services:
@@ -14,6 +17,8 @@ This application demonstrates a microservices architecture with the following se
 - **Redis** - Message queue for asynchronous event processing
 
 ### Architecture Diagram
+
+![Architecture Diagram](images/product.jpg)
 
 ```
 ┌─────────────┐
@@ -70,6 +75,8 @@ This application demonstrates a microservices architecture with the following se
    - Ratings Service API: http://localhost:5003
    - MongoDB: localhost:27017
    - Redis: localhost:6379
+
+![Application Running](images/app-running.png)
 
 4. **Default Products**
    - The application automatically seeds 5 default products on startup
@@ -175,6 +182,8 @@ product-catalog-app/
 
 ## 🐳 Docker
 
+![Docker Architecture](images/docker-architecture.png)
+
 ### Build Individual Services
 
 ```bash
@@ -196,6 +205,8 @@ docker build -t product-catalog-frontend:latest .
 ```
 
 ## ☸️ Kubernetes Deployment
+
+![Kubernetes Deployment](images/kubernetes-deployment.png)
 
 ### Prerequisites
 
@@ -243,6 +254,8 @@ docker build -t product-catalog-frontend:latest .
 
 ## 🔄 CI/CD Pipelines
 
+![CI/CD Pipeline](images/cicd-pipeline.png)
+
 Each microservice has its own independent CI/CD pipeline in `.github/workflows/`:
 
 - `product-service-ci.yml`
@@ -256,6 +269,8 @@ Each microservice has its own independent CI/CD pipeline in `.github/workflows/`
 - **Docker Build** - Builds and pushes Docker images
 - **Security Scanning** - Trivy vulnerability scanning
 - **Independent Deployments** - Each service deploys separately
+
+![Pipeline Status](images/pipeline-status.png)
 
 ### Setup GitHub Secrets
 
@@ -289,6 +304,8 @@ npm test
 ```
 
 ## 📊 Monitoring
+
+![Monitoring Dashboard](images/monitoring-dashboard.png)
 
 ### Health Checks
 
@@ -397,6 +414,8 @@ curl -X POST http://localhost:5001/api/ratings \
 
 ## 🎯 DevOps Portfolio Highlights
 
+![DevOps Stack](images/devops-stack.png)
+
 This project demonstrates:
 
 ✅ **Microservices Architecture** - Independent, scalable services  
@@ -412,6 +431,24 @@ This project demonstrates:
 
 - [Requirements Document](./requirements.md) - Detailed requirements and architecture
 - [API Documentation](./docs/api.md) - API endpoint documentation (to be added)
+- [Azure Migration Guide](../azure.md) - Complete guide for migrating to Azure with AKS and ArgoCD
+
+## 📸 Screenshots
+
+### Application UI
+![Frontend UI](images/frontend-ui.png)
+
+### Product List View
+![Product List](images/product-list.png)
+
+### Product Details with Ratings
+![Product Details](images/product-details.png)
+
+### Docker Containers Running
+![Docker Containers](images/docker-containers.png)
+
+### Kubernetes Pods
+![Kubernetes Pods](images/k8s-pods.png)
 
 ## 🤝 Contributing
 
