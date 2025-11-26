@@ -2,87 +2,86 @@ name: Product Service CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, feature]
     paths:
-      - 'product-service/**'
+      - "product-service/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'product-service/**'
+      - "product-service/**"
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: product-service/package-lock.json
-    
-    - name: Install dependencies
-      working-directory: ./product-service
-      run: npm ci
-    
-    - name: Run linter
-      working-directory: ./product-service
-      run: npm run lint || true
-    
-    - name: Run tests
-      working-directory: ./product-service
-      run: npm test || true
-      env:
-        NODE_ENV: test
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: product-service/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./product-service
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./product-service
+        run: npm run lint || true
+
+      - name: Run tests
+        working-directory: ./product-service
+        run: npm test || true
+        env:
+          NODE_ENV: test
 
   build:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./product-service
-        push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/product-service:latest
-          ${{ secrets.DOCKER_USERNAME }}/product-service:${{ github.sha }}
-        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/product-service:latest
-        cache-to: type=inline
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./product-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/product-service:latest
+            ${{ secrets.DOCKER_USERNAME }}/product-service:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/product-service:latest
+          cache-to: type=inline
 
   security-scan:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ secrets.DOCKER_USERNAME }}/product-service:${{ github.sha }}
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-    
-    - name: Upload Trivy results to GitHub Security
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: 'trivy-results.sarif'
 
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/product-service:${{ github.sha }}
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: "trivy-results.sarif"
