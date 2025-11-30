@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: worker-service-config
-  namespace: default
+  namespace: product-catalog
 data:
   NODE_ENV: "production"
   LOG_LEVEL: "info"
@@ -12,7 +12,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker-service
-  namespace: default
+  namespace: product-catalog
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: worker-service=productacr2025.azurecr.io/worker-service
+    argocd-image-updater.argoproj.io/update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: master
 spec:
   replicas: 2
   selector:
@@ -23,9 +28,11 @@ spec:
       labels:
         app: worker-service
     spec:
+      imagePullSecrets:
+        - name: acr-secret
       containers:
       - name: worker-service
-        image: YOUR_DOCKER_USERNAME/worker-service:latest
+        image: productacr2025.azurecr.io/worker-service:57
         imagePullPolicy: Always
         env:
         - name: NODE_ENV
@@ -63,7 +70,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: worker-service-hpa
-  namespace: default
+  namespace: product-catalog
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

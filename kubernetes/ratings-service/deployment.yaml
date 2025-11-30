@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ratings-service
-  namespace: default
+  namespace: product-catalog
 spec:
   type: ClusterIP
   ports:
@@ -16,7 +16,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ratings-service-config
-  namespace: default
+  namespace: product-catalog
 data:
   PORT: "5001"
   NODE_ENV: "production"
@@ -26,7 +26,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ratings-service
-  namespace: default
+  namespace: product-catalog
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: ratings-service=productacr2025.azurecr.io/ratings-service
+    argocd-image-updater.argoproj.io/update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: master
 spec:
   replicas: 2
   selector:
@@ -37,9 +42,11 @@ spec:
       labels:
         app: ratings-service
     spec:
+      imagePullSecrets:
+        - name: acr-secret
       containers:
       - name: ratings-service
-        image: YOUR_DOCKER_USERNAME/ratings-service:latest
+        image: productacr2025.azurecr.io/ratings-service:55
         imagePullPolicy: Always
         ports:
         - containerPort: 5001
@@ -91,7 +98,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ratings-service-hpa
-  namespace: default
+  namespace: product-catalog
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
