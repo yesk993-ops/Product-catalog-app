@@ -5,13 +5,13 @@ metadata:
   namespace: product-catalog
 spec:
   type: NodePort
-  ports:
-    - port: 80          # Service port
-      targetPort: 80    # Container port
-      nodePort: 30080   # Optional: specify NodePort (range 30000–32767)
-      name: http
   selector:
     app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
 
 ---
 apiVersion: apps/v1
@@ -20,7 +20,7 @@ metadata:
   name: frontend
   namespace: product-catalog
   annotations:
-    argocd-image-updater.argoproj.io/image-list: frontend=productacr2025.azurecr.io/frontend
+    argocd-image-updater.argoproj.io/image-list: frontend=mydocker3692/product-catalog
     argocd-image-updater.argoproj.io/update-strategy: latest
     argocd-image-updater.argoproj.io/write-back-method: git
     argocd-image-updater.argoproj.io/git-branch: master
@@ -34,11 +34,9 @@ spec:
       labels:
         app: frontend
     spec:
-      imagePullSecrets:
-        - name: acr-secret
       containers:
       - name: frontend
-        image: productacr2025.azurecr.io/frontend:58
+        image: mydocker3692/product-catalog:frontend-2
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -61,7 +59,7 @@ spec:
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 5
-        
+
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -82,4 +80,3 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-
