@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         IMAGE_TAG = "${BUILD_NUMBER}"
-        SONARQUBE = "SonarQubeServer"
+        SCANNER_HOME = tool 'sonar-scanner'
     }
 
     stages {
@@ -15,19 +15,25 @@ pipeline {
             }
         }
 
-        stage('SonarQube Scan') {
-    steps {
-        sh '''
-        docker run --rm \
-          -e SONAR_HOST_URL=http://192.168.122.80:9000 \
-          -e SONAR_LOGIN=sonar-token \
-          -v $(pwd):/usr/src \
-          sonarsource/sonar-scanner-cli \
-          -Dsonar.projectKey=product-catalog \
-          -Dsonar.sources=.
-        '''
-    }
-}
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                        $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=Uber \
+                        -Dsonar.projectKey=Uber
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
         stage('Parallel Build + Trivy Scan') {
             parallel {
