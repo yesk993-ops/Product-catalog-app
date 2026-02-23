@@ -7,10 +7,6 @@ pipeline {
         SONARQUBE = "SonarQubeServer"
     }
 
-    tools {
-        sonarRunnerInstallation 'sonar-scanner'
-    }
-
     stages {
 
         stage('Checkout') {
@@ -32,7 +28,6 @@ pipeline {
         }
 
         stage('Parallel Build + Trivy Scan') {
-
             parallel {
 
                 stage('Product Service') {
