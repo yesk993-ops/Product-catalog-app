@@ -5,12 +5,13 @@ metadata:
   namespace: product-catalog
 spec:
   type: ClusterIP
-  ports:
-    - port: 5000
-      targetPort: 5000
-      name: http
   selector:
     app: product-service
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -21,6 +22,7 @@ data:
   PORT: "5000"
   NODE_ENV: "production"
   LOG_LEVEL: "info"
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -28,7 +30,7 @@ metadata:
   name: product-service
   namespace: product-catalog
   annotations:
-    argocd-image-updater.argoproj.io/image-list: product-service=productacr2025.azurecr.io/product-service
+    argocd-image-updater.argoproj.io/image-list: product-service=mydocker3692/product-catalog
     argocd-image-updater.argoproj.io/update-strategy: latest
     argocd-image-updater.argoproj.io/write-back-method: git
     argocd-image-updater.argoproj.io/git-branch: master
@@ -42,11 +44,9 @@ spec:
       labels:
         app: product-service
     spec:
-      imagePullSecrets:
-        - name: acr-secret
       containers:
       - name: product-service
-        image: productacr2025.azurecr.io/product-service:60
+        image: mydocker3692/product-catalog:product-service-2
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
@@ -89,6 +89,7 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
+
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -115,4 +116,3 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-
