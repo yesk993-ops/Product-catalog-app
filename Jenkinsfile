@@ -16,16 +16,18 @@ pipeline {
         }
 
         stage('SonarQube Scan') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE}") {
-                    sh '''
-                    sonar-scanner \
-                    -Dsonar.projectKey=product-catalog \
-                    -Dsonar.sources=.
-                    '''
-                }
-            }
-        }
+    steps {
+        sh '''
+        docker run --rm \
+          -e SONAR_HOST_URL=http://192.168.122.80:9000 \
+          -e SONAR_LOGIN=sonar-token \
+          -v $(pwd):/usr/src \
+          sonarsource/sonar-scanner-cli \
+          -Dsonar.projectKey=product-catalog \
+          -Dsonar.sources=.
+        '''
+    }
+}
 
         stage('Parallel Build + Trivy Scan') {
             parallel {
