@@ -5,6 +5,127 @@ metadata:
   namespace: product-catalog
 spec:
   type: ClusterIP
+  selector:
+    app: ratings-service
+  ports:
+    - name: http
+      port: 5001
+      targetPort: 5001
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratings-service-config
+  namespace: product-catalog
+data:
+  PORT: "5001"
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings-service
+  namespace: product-catalog
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: ratings-service=mydocker3692/product-catalog
+    argocd-image-updater.argoproj.io/update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: master
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ratings-service
+  template:
+    metadata:
+      labels:
+        app: ratings-service
+    spec:
+      containers:
+      - name: ratings-service
+        image: mydocker3692/product-catalog:ratings-service-2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ratings-service-config
+              key: PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ratings-service-config
+              key: NODE_ENV
+        - name: MONGO_URI
+          value: "mongodb://mongodb:27017/ratings"
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ratings-service-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ratings-service-hpa
+  namespace: product-catalog
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ratings-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80apiVersion: v1
+kind: Service
+metadata:
+  name: ratings-service
+  namespace: product-catalog
+spec:
+  type: ClusterIP
   ports:
     - port: 5001
       targetPort: 5001
