@@ -8,7 +8,7 @@ pipeline {
     }
 
     tools {
-        sonarScanner 'sonar-scanner'
+        sonarRunnerInstallation 'sonar-scanner'
     }
 
     stages {
